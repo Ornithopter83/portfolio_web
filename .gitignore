@@ -9,6 +9,7 @@ obj/
 .nuget/
 artifacts/
 WEB.zip
+Witch_Animated_IdleWalkCast.glb
 .env
 .env.*
 supabase/.branches/
