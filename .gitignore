@@ -9,3 +9,7 @@ obj/
 .nuget/
 artifacts/
 WEB.zip
+.env
+.env.*
+supabase/.branches/
+supabase/.temp/

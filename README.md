@@ -45,3 +45,15 @@ ipTIME ipDISK Drive로 NAS가 `S:`에 마운트되어 있다면 생성과 복사
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas.ps1 -DeployPath S:\HDD1\DocRoot
 ```
+
+## Supabase
+
+Supabase DB 변경사항은 `supabase/migrations`에서 관리합니다. 새 Supabase 프로젝트를 만든 뒤 CLI로 연결하고 마이그레이션을 적용합니다.
+
+```powershell
+supabase login
+supabase link --project-ref <project-ref>
+supabase db push
+```
+
+현재 초기 마이그레이션은 `관리자`, `방문객` 2가지 앱 권한 상태를 생성합니다.

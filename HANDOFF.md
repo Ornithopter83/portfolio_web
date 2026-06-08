@@ -18,6 +18,7 @@
 - Three.js 큐브: `src/PortfolioLauncher.Web/wwwroot/js/demoLauncher3d.js`
 - NAS용 Apache 설정: `src/PortfolioLauncher.Web/wwwroot/.htaccess`
 - NAS 배포 자동화: `scripts/publish-nas.ps1`
+- Supabase 권한 등급 마이그레이션: `supabase/migrations/20260608041000_create_access_roles.sql`
 
 ## 검증 명령
 
@@ -52,3 +53,15 @@ http://suhonas.ipdisk.co.kr:8080/framework/blazor.boot.json
 ```
 
 `framework/blazor.webassembly.js`에서 긴 JavaScript 코드가 보이면 정상입니다. 실제 화면은 `/`에서 확인합니다.
+
+## Supabase 준비
+
+아직 Supabase DB 프로젝트 생성 전입니다. 프로젝트 생성 후 다음 명령으로 로컬 migration을 적용합니다.
+
+```powershell
+supabase login
+supabase link --project-ref <project-ref>
+supabase db push
+```
+
+초기 migration은 `관리자(admin)`, `방문객(visitor)` 2가지 앱 권한 상태를 생성합니다. 신규 Auth 사용자는 `visitor`가 자동 부여됩니다. 첫 관리자는 Supabase SQL Editor에서 직접 `user_access_roles.role_code`를 `admin`으로 수정합니다.
