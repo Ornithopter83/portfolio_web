@@ -14,6 +14,21 @@ ipTIME ipDISK Drive로 NAS가 `S:`에 마운트되어 있다면 생성과 복사
 powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas.ps1 -DeployPath S:\HDD1\DocRoot
 ```
 
+NAS 배포와 GitHub push를 한 번에 실행할 수도 있습니다.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1
+```
+
+더블클릭 실행용 래퍼:
+
+```text
+scripts\publish-nas-and-push.cmd
+scripts\push-main.cmd
+```
+
+push 스크립트는 커밋되지 않은 변경사항이 있으면 중단합니다. 먼저 commit을 만든 뒤 실행합니다.
+
 스크립트는 다음 작업을 수행합니다.
 
 1. `dotnet restore PortfolioLauncher.sln --configfile NuGet.Config`

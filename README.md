@@ -46,6 +46,14 @@ ipTIME ipDISK Drive로 NAS가 `S:`에 마운트되어 있다면 생성과 복사
 powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas.ps1 -DeployPath S:\HDD1\DocRoot
 ```
 
+NAS 배포와 GitHub push를 한 번에 실행하려면:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1
+```
+
+더블클릭 실행이 필요하면 `scripts\publish-nas-and-push.cmd`를 사용합니다. GitHub push만 실행하려면 `scripts\push-main.cmd`를 사용합니다.
+
 ## Supabase
 
 Supabase DB 변경사항은 `supabase/migrations`에서 관리합니다. 새 Supabase 프로젝트를 만든 뒤 CLI로 연결하고 마이그레이션을 적용합니다.

@@ -19,6 +19,7 @@
 - 마녀 GLB 정적 자산: `src/PortfolioLauncher.Web/wwwroot/models/witch.glb`
 - NAS용 Apache 설정: `src/PortfolioLauncher.Web/wwwroot/.htaccess`
 - NAS 배포 자동화: `scripts/publish-nas.ps1`
+- NAS 배포 + Git push 자동화: `scripts/publish-nas-and-push.ps1`
 - Supabase 권한 등급 마이그레이션: `supabase/migrations/20260608041000_create_access_roles.sql`
 
 ## 검증 명령
@@ -43,6 +44,14 @@ ipTIME ipDISK Drive로 NAS가 `S:`에 마운트되어 있다면 다음 명령으
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas.ps1 -DeployPath S:\HDD1\DocRoot
 ```
+
+NAS 배포와 GitHub push를 한 번에 실행하려면 다음 명령을 사용합니다.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1
+```
+
+더블클릭 실행용으로 `scripts\publish-nas-and-push.cmd`, GitHub push만 실행하는 `scripts\push-main.cmd`도 있습니다.
 
 확인 URL:
 
