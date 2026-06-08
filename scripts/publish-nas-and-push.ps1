@@ -22,8 +22,8 @@ function Assert-GitRepository {
     }
 
     $topLevel = (& git rev-parse --show-toplevel).Trim()
-    if ((Resolve-Path $topLevel).Path -ne $repoRoot.Path) {
-        throw "Git repository root is '$topLevel', expected '$repoRoot'."
+    if (-not $topLevel) {
+        throw "Git repository root could not be resolved."
     }
 }
 

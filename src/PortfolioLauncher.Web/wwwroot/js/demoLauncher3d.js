@@ -14,6 +14,19 @@ let dotNetRef;
 let walkUntil = 0;
 let walkStart = 0;
 let walkBones = {};
+let animationActions = {};
+let activeAction;
+let pressedKeys = new Set();
+let castingUntil = 0;
+
+const moveSpeed = 1.35;
+const modelForwardOffset = Math.PI;
+const movementBounds = {
+    minX: -1.7,
+    maxX: 1.7,
+    minZ: -1.15,
+    maxZ: 1.15
+};
 
 export async function startDemoLauncher(canvasId) {
     const canvas = document.getElementById(canvasId);
@@ -65,6 +78,13 @@ export function stopDemoLauncher() {
     walkUntil = 0;
     walkStart = 0;
     walkBones = {};
+    animationActions = {};
+    activeAction = undefined;
+    pressedKeys.clear();
+    castingUntil = 0;
+
+    window.removeEventListener('keydown', handleDemoKeyDown);
+    window.removeEventListener('keyup', handleDemoKeyUp);
 
     if (character) {
         disposeObject(character);
@@ -84,11 +104,16 @@ export function stopDemoLauncher() {
 export function registerEscapeClose(reference) {
     dotNetRef = reference;
     window.addEventListener('keydown', handleEscape);
+    window.addEventListener('keydown', handleDemoKeyDown);
+    window.addEventListener('keyup', handleDemoKeyUp);
 }
 
 export function unregisterEscapeClose() {
     window.removeEventListener('keydown', handleEscape);
+    window.removeEventListener('keydown', handleDemoKeyDown);
+    window.removeEventListener('keyup', handleDemoKeyUp);
     dotNetRef = undefined;
+    pressedKeys.clear();
 }
 
 export async function loadCharacterModel(url = './models/witch.glb') {
@@ -100,16 +125,7 @@ export async function loadCharacterModel(url = './models/witch.glb') {
         prepareCharacter(character);
         scene.add(character);
 
-        if (gltf.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(character);
-            const walkClip = findClip(gltf.animations, ['walk', 'run', 'move']);
-            if (walkClip) {
-                const action = mixer.clipAction(walkClip);
-                action.play();
-                action.paused = true;
-                character.userData.walkAction = action;
-            }
-        }
+        setupAnimationActions(gltf.animations);
     } catch {
         cube = createPlaceholderCube();
         scene.add(cube);
@@ -117,16 +133,7 @@ export async function loadCharacterModel(url = './models/witch.glb') {
 }
 
 export function playDemoAction(_demoKey) {
-    const now = performance.now() / 1000;
-    walkStart = now;
-    walkUntil = now + 1.8;
-
-    const action = character?.userData?.walkAction;
-    if (action) {
-        action.reset();
-        action.paused = false;
-        action.play();
-    }
+    startCasting();
 }
 
 function createPlaceholderCube() {
@@ -153,7 +160,9 @@ function render() {
         cube.rotation.y += 0.014;
     }
 
+    updateKeyboardMovement(delta);
     updateProceduralWalk();
+    updateActionState();
     renderer.render(scene, camera);
     frameId = requestAnimationFrame(render);
 }
@@ -167,7 +176,7 @@ function prepareCharacter(model) {
 
     model.scale.setScalar(scale);
     model.position.set(-center.x * scale, -box.min.y * scale - 1.45, -center.z * scale);
-    model.rotation.y = Math.PI * 0.08;
+    model.rotation.y = modelForwardOffset;
 
     model.traverse((node) => {
         if (node.isMesh) {
@@ -179,6 +188,132 @@ function prepareCharacter(model) {
             node.userData.baseRotation = node.rotation.clone();
         }
     });
+}
+
+function setupAnimationActions(clips) {
+    if (!clips.length) {
+        return;
+    }
+
+    mixer = new THREE.AnimationMixer(character);
+    animationActions = {
+        idle: createAction(findClip(clips, ['idle', 'stand', 'wait'])),
+        walk: createAction(findClip(clips, ['walk', 'run', 'move'])),
+        cast: createAction(findClip(clips, ['cast', 'spell', 'magic', 'attack']))
+    };
+
+    if (animationActions.cast) {
+        animationActions.cast.loop = THREE.LoopOnce;
+        animationActions.cast.clampWhenFinished = true;
+    }
+
+    if (animationActions.idle) {
+        playAction(animationActions.idle, 0);
+    }
+}
+
+function createAction(clip) {
+    return clip ? mixer.clipAction(clip) : undefined;
+}
+
+function playAction(action, fadeSeconds = 0.15) {
+    if (!action || activeAction === action) {
+        return;
+    }
+
+    const previousAction = activeAction;
+    activeAction = action;
+    action.enabled = true;
+    action.paused = false;
+    action.reset();
+    action.play();
+
+    if (previousAction && fadeSeconds > 0) {
+        previousAction.crossFadeTo(action, fadeSeconds, false);
+    }
+}
+
+function updateKeyboardMovement(delta) {
+    if (!character) {
+        return;
+    }
+
+    const direction = new THREE.Vector3(
+        (isPressed('d') ? 1 : 0) - (isPressed('a') ? 1 : 0),
+        0,
+        (isPressed('s') ? 1 : 0) - (isPressed('w') ? 1 : 0)
+    );
+
+    if (direction.lengthSq() === 0 || isCasting()) {
+        return;
+    }
+
+    direction.normalize();
+    character.position.x = THREE.MathUtils.clamp(
+        character.position.x + direction.x * moveSpeed * delta,
+        movementBounds.minX,
+        movementBounds.maxX
+    );
+    character.position.z = THREE.MathUtils.clamp(
+        character.position.z + direction.z * moveSpeed * delta,
+        movementBounds.minZ,
+        movementBounds.maxZ
+    );
+    character.rotation.y = Math.atan2(direction.x, direction.z) + modelForwardOffset;
+
+    if (animationActions.walk) {
+        playAction(animationActions.walk);
+    } else {
+        startProceduralWalk(0.2);
+    }
+}
+
+function updateActionState() {
+    if (!character) {
+        return;
+    }
+
+    if (isCasting()) {
+        return;
+    }
+
+    const moving = isPressed('w') || isPressed('a') || isPressed('s') || isPressed('d');
+    if (moving && animationActions.walk) {
+        playAction(animationActions.walk);
+        return;
+    }
+
+    if (!moving && animationActions.idle) {
+        playAction(animationActions.idle);
+    }
+}
+
+function startCasting() {
+    castingUntil = performance.now() / 1000 + 1.2;
+    pressedKeys.clear();
+
+    if (animationActions.cast) {
+        playAction(animationActions.cast, 0.08);
+        return;
+    }
+
+    startProceduralCast();
+}
+
+function isCasting() {
+    return performance.now() / 1000 < castingUntil;
+}
+
+function startProceduralWalk(durationSeconds) {
+    const now = performance.now() / 1000;
+    walkStart = now;
+    walkUntil = Math.max(walkUntil, now + durationSeconds);
+}
+
+function startProceduralCast() {
+    startProceduralWalk(0.55);
+    setBoneRotation('J_Bip_L_UpperArm', -0.75, 0, 0.25);
+    setBoneRotation('J_Bip_R_UpperArm', -0.75, 0, -0.25);
 }
 
 function updateProceduralWalk() {
@@ -235,7 +370,7 @@ function resetWalkPose() {
         character.position.y -= character.userData.lastWalkBob ?? 0;
         character.userData.lastWalkBob = 0;
         character.rotation.z = 0;
-        character.userData.walkAction?.stop();
+        animationActions.walk?.stop();
     }
 }
 
@@ -268,4 +403,29 @@ function handleEscape(event) {
     if (event.key === 'Escape' && dotNetRef) {
         dotNetRef.invokeMethodAsync('CloseFromEscape');
     }
+}
+
+function handleDemoKeyDown(event) {
+    const key = event.key.toLowerCase();
+
+    if (['w', 'a', 's', 'd', 'enter'].includes(key)) {
+        event.preventDefault();
+    }
+
+    if (key === 'enter') {
+        startCasting();
+        return;
+    }
+
+    if (['w', 'a', 's', 'd'].includes(key)) {
+        pressedKeys.add(key);
+    }
+}
+
+function handleDemoKeyUp(event) {
+    pressedKeys.delete(event.key.toLowerCase());
+}
+
+function isPressed(key) {
+    return pressedKeys.has(key);
 }
