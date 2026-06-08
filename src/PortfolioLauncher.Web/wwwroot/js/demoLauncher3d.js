@@ -197,9 +197,9 @@ function setupAnimationActions(clips) {
 
     mixer = new THREE.AnimationMixer(character);
     animationActions = {
-        idle: createAction(findClip(clips, ['idle', 'stand', 'wait'])),
-        walk: createAction(findClip(clips, ['walk', 'run', 'move'])),
-        cast: createAction(findClip(clips, ['cast', 'spell', 'magic', 'attack']))
+        idle: createAction(findClip(clips, ['Idle', 'idle', 'stand', 'wait'])),
+        walk: createAction(findClip(clips, ['Walk', 'walk', 'run', 'move'])),
+        cast: createAction(findClip(clips, ['Cast_01', 'cast', 'spell', 'magic', 'attack']))
     };
 
     if (animationActions.cast) {
@@ -375,7 +375,13 @@ function resetWalkPose() {
 }
 
 function findClip(clips, names) {
-    return clips.find((clip) => names.some((name) => clip.name.toLowerCase().includes(name)));
+    const exactMatch = clips.find((clip) => names.some((name) => clip.name === name));
+
+    if (exactMatch) {
+        return exactMatch;
+    }
+
+    return clips.find((clip) => names.some((name) => clip.name.toLowerCase().includes(name.toLowerCase())));
 }
 
 function disposeObject(object) {
