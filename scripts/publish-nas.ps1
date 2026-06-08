@@ -98,15 +98,29 @@ if ($DeployPath) {
     }
 
     Get-ChildItem -LiteralPath $nasPath -Force |
-        ForEach-Object {
-            $targetPath = Join-Path $resolvedDeployPath $_.Name
-            if (Test-Path -LiteralPath $targetPath) {
-                Remove-Item -LiteralPath $targetPath -Recurse -Force
-            }
-        }
-
-    Get-ChildItem -LiteralPath $nasPath -Force |
         Copy-Item -Destination $resolvedDeployPath -Recurse -Force
+
+    $targetFrameworkPath = Join-Path $resolvedDeployPath "_framework"
+    if (Test-Path -LiteralPath $targetFrameworkPath) {
+        Remove-Item -LiteralPath $targetFrameworkPath -Recurse -Force
+    }
+
+    Get-ChildItem -LiteralPath $resolvedDeployPath -Recurse -Force -File |
+        Where-Object {
+            $_.FullName -notlike "*Network Trashes Folder*" -and
+            ($_.Extension -eq ".br" -or $_.Extension -eq ".gz")
+        } |
+        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+
+    foreach ($requiredPath in @(
+        (Join-Path $resolvedDeployPath "index.html"),
+        (Join-Path $resolvedDeployPath "framework/blazor.webassembly.js"),
+        (Join-Path $resolvedDeployPath "framework/blazor.boot.json")
+    )) {
+        if (-not (Test-Path -LiteralPath $requiredPath)) {
+            throw "Deploy output is missing required file: $requiredPath"
+        }
+    }
 
     Write-Host "NAS publish output copied to: $resolvedDeployPath"
 }

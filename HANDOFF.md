@@ -53,6 +53,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1
 
 더블클릭 실행용으로 `scripts\publish-nas-and-push.cmd`, GitHub push만 실행하는 `scripts\push-main.cmd`도 있습니다.
 
+`publish-nas.ps1 -DeployPath`는 기존 웹 루트 파일을 먼저 지우지 않고 덮어쓰기 복사한 뒤 `_framework`, `.br`, `.gz` 잔여물만 정리합니다. ipDISK Drive 복사가 중간에 끊겨도 `index.html`이 사라져 사이트가 빈 상태가 되는 위험을 줄이기 위한 방식입니다.
+
 확인 URL:
 
 ```text
