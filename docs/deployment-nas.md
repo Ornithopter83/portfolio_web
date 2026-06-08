@@ -71,3 +71,26 @@ http://suhonas.ipdisk.co.kr:8080/framework/blazor.boot.json
 - `.dll`: `application/octet-stream`
 - `.json`: `application/json`
 - `.js`: `text/javascript`
+## Current Script Flow
+
+`publish-nas.ps1` owns the deployable build:
+
+1. Optional `dotnet restore`.
+2. `dotnet publish` in Release mode.
+3. Copy `wwwroot` into `artifacts/publish-nas-no-underscore`.
+4. Rename `_framework` to `framework`.
+5. Rewrite framework references in text files.
+6. Remove `.br` and `.gz`.
+7. If `-DeployPath` is supplied, remove old app-managed entries in that target and copy the fresh output.
+
+`publish-nas-and-push.ps1` owns orchestration:
+
+1. Verify that `C:\Project\WEB` is a Git repository root.
+2. Run `publish-nas.ps1`.
+3. Run `push-main.ps1` unless `-SkipPush` is supplied.
+
+Test server copy without Git push:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1 -NoRestore -SkipPush -DeployPath .\artifacts\deploy-script-check
+```

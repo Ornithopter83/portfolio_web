@@ -69,3 +69,13 @@ supabase db push
 ## Demo Launcher 3D
 
 시연 모달은 `wwwroot/models/witch.glb`를 Three.js로 로드합니다. 현재 GLB에는 내장 animation clip이 없어 시연 버튼 클릭 시 JavaScript에서 팔/다리 본을 움직이는 절차적 걷기 동작을 재생합니다.
+## Script Flow
+
+- `scripts\publish-nas.ps1`: restore, Release publish, rewrite `_framework` to `framework`, remove `.br`/`.gz`, and optionally copy to `-DeployPath`.
+- `scripts\publish-nas-and-push.ps1`: verifies that `C:\Project\WEB` is the Git repository root, runs `publish-nas.ps1`, then runs `push-main.ps1`.
+- Use `-NoRestore` only after packages are already restored.
+- Use `-SkipPush` to test the server copy without pushing to GitHub.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1 -DeployPath S:\HDD1\DocRoot
+```

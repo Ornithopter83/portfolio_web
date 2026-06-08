@@ -25,6 +25,27 @@ function Invoke-DotNet {
     }
 }
 
+function Resolve-SafeDeployPath {
+    param([string]$Path)
+
+    $resolvedPath = if (Test-Path -LiteralPath $Path) {
+        (Resolve-Path -LiteralPath $Path).Path
+    }
+    else {
+        New-Item -ItemType Directory -Path $Path -Force | Out-Null
+        (Resolve-Path -LiteralPath $Path).Path
+    }
+
+    $rootPath = [System.IO.Path]::GetPathRoot($resolvedPath).TrimEnd("\")
+    $trimmedPath = $resolvedPath.TrimEnd("\")
+
+    if ($trimmedPath -eq $rootPath) {
+        throw "DeployPath must not be a drive root: $resolvedPath"
+    }
+
+    return $resolvedPath
+}
+
 if (-not $NoRestore) {
     Invoke-DotNet @("restore", $solutionPath, "--configfile", $nugetConfigPath)
 }
@@ -89,21 +110,32 @@ if ($remainingUnderscoreRefs) {
 Write-Host "NAS publish output prepared: $nasPath"
 
 if ($DeployPath) {
-    $resolvedDeployPath = if (Test-Path -LiteralPath $DeployPath) {
-        (Resolve-Path -LiteralPath $DeployPath).Path
-    }
-    else {
-        New-Item -ItemType Directory -Path $DeployPath -Force
-        (Resolve-Path -LiteralPath $DeployPath).Path
+    $resolvedDeployPath = Resolve-SafeDeployPath $DeployPath
+
+    $appEntriesToReplace = @(
+        "_framework",
+        "framework",
+        "css",
+        "js",
+        "lib",
+        "models",
+        "sample-data",
+        "index.html",
+        "favicon.png",
+        "icon-192.png",
+        "PortfolioLauncher.Web.styles.css",
+        ".htaccess"
+    )
+
+    foreach ($entry in $appEntriesToReplace) {
+        $targetPath = Join-Path $resolvedDeployPath $entry
+        if (Test-Path -LiteralPath $targetPath) {
+            Remove-Item -LiteralPath $targetPath -Recurse -Force
+        }
     }
 
     Get-ChildItem -LiteralPath $nasPath -Force |
         Copy-Item -Destination $resolvedDeployPath -Recurse -Force
-
-    $targetFrameworkPath = Join-Path $resolvedDeployPath "_framework"
-    if (Test-Path -LiteralPath $targetFrameworkPath) {
-        Remove-Item -LiteralPath $targetFrameworkPath -Recurse -Force
-    }
 
     Get-ChildItem -LiteralPath $resolvedDeployPath -Recurse -Force -File |
         Where-Object {
