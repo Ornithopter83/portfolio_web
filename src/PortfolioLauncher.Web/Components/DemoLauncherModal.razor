@@ -68,9 +68,14 @@
         await module.InvokeVoidAsync("registerEscapeClose", dotNetReference);
     }
 
-    private void SelectDemo(DemoItem demo)
+    private async Task SelectDemo(DemoItem demo)
     {
         selectedDemo = demo;
+
+        if (module is not null)
+        {
+            await module.InvokeVoidAsync("playDemoAction", demo.Key);
+        }
     }
 
     private async Task CloseAsync()

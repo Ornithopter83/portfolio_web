@@ -15,7 +15,8 @@
 - 프로필 페이지: `src/PortfolioLauncher.Web/Pages/Home.razor`
 - 포트폴리오 페이지: `src/PortfolioLauncher.Web/Pages/Portfolio.razor`
 - Demo Launcher 모달: `src/PortfolioLauncher.Web/Components/DemoLauncherModal.razor`
-- Three.js 큐브: `src/PortfolioLauncher.Web/wwwroot/js/demoLauncher3d.js`
+- Three.js 마녀 모델/절차적 걷기: `src/PortfolioLauncher.Web/wwwroot/js/demoLauncher3d.js`
+- 마녀 GLB 정적 자산: `src/PortfolioLauncher.Web/wwwroot/models/witch.glb`
 - NAS용 Apache 설정: `src/PortfolioLauncher.Web/wwwroot/.htaccess`
 - NAS 배포 자동화: `scripts/publish-nas.ps1`
 - Supabase 권한 등급 마이그레이션: `supabase/migrations/20260608041000_create_access_roles.sql`
@@ -65,3 +66,9 @@ supabase db push
 ```
 
 초기 migration은 `관리자(admin)`, `방문객(visitor)` 2가지 앱 권한 상태를 생성합니다. 신규 Auth 사용자는 `visitor`가 자동 부여됩니다. 첫 관리자는 Supabase SQL Editor에서 직접 `user_access_roles.role_code`를 `admin`으로 수정합니다.
+
+## Demo Launcher 3D
+
+`마녀_R.glb`는 리깅은 있지만 glTF animation clip이 0개입니다. 현재는 `witch.glb`를 로드한 뒤 시연 버튼 클릭 시 `J_Bip_*` 팔/다리 본을 직접 흔드는 절차적 걷기 동작을 재생합니다.
+
+향후 WASD 이동과 Return 캐스팅을 추가하려면 `demoLauncher3d.js`에 키보드 상태를 저장하고 render loop에서 이동 벡터를 적용합니다. 캐스팅은 `cast` clip이 포함된 GLB가 있으면 `AnimationMixer`로 재생하고, 없으면 상체/팔 본을 이용한 절차적 동작으로 임시 구현할 수 있습니다.

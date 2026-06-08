@@ -57,3 +57,7 @@ supabase db push
 ```
 
 현재 초기 마이그레이션은 `관리자`, `방문객` 2가지 앱 권한 상태를 생성합니다.
+
+## Demo Launcher 3D
+
+시연 모달은 `wwwroot/models/witch.glb`를 Three.js로 로드합니다. 현재 GLB에는 내장 animation clip이 없어 시연 버튼 클릭 시 JavaScript에서 팔/다리 본을 움직이는 절차적 걷기 동작을 재생합니다.
