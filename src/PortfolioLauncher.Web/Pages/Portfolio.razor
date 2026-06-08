@@ -1,0 +1,32 @@
+@page "/portfolio"
+
+<PageTitle>포트폴리오</PageTitle>
+
+<section class="page-section">
+    <p class="eyebrow">Portfolio</p>
+    <h1>포트폴리오</h1>
+    <p class="lead-copy">프로젝트 카드가 들어갈 placeholder 목록입니다.</p>
+
+    <div class="project-grid">
+        @foreach (var project in Projects)
+        {
+            <article class="project-card">
+                <span>@project.Category</span>
+                <h2>@project.Title</h2>
+                <p>@project.Summary</p>
+            </article>
+        }
+    </div>
+</section>
+
+@code {
+    private static readonly ProjectCard[] Projects =
+    [
+        new("OCR", "문서 OCR 파이프라인", "스캔 문서에서 텍스트를 추출하고 검수 큐로 넘기는 프로젝트 placeholder입니다."),
+        new("Automation", "업무 자동화 도구", "반복 업무를 규칙 기반으로 실행하는 자동화 프로젝트 placeholder입니다."),
+        new("Web", "NAS 웹서비스", "정적 웹 앱을 NAS에 배포하고 내부 서비스와 연결하는 프로젝트 placeholder입니다."),
+        new("Data", "Supabase 연동", "Supabase 데이터 모델과 Blazor 클라이언트를 연결하는 프로젝트 placeholder입니다.")
+    ];
+
+    private sealed record ProjectCard(string Category, string Title, string Summary);
+}
