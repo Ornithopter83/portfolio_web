@@ -21,6 +21,10 @@ GitHub repository for restore/maintenance:
 
 - Web app: `apps/web`
 - Push worker: `apps/push-worker`
+- VS solution: `PortfolioLauncher.sln`
+- VS projects:
+  - `apps/web/PortfolioLauncher.Web.njsproj`
+  - `apps/push-worker/PortfolioLauncher.PushWorker.njsproj`
 - Three.js module: `apps/web/src/demoLauncher3d.js`
 - 3D model asset: `apps/web/public/models/witch.glb`
 - Service Worker: `apps/web/public/sw.js`

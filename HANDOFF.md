@@ -6,6 +6,7 @@
 
 - Web app: `apps/web`
 - Push worker: `apps/push-worker`
+- VS solution: `PortfolioLauncher.sln`
 - GitHub repository: `https://github.com/Ornithopter83/portfolio_web`
 - GitHub Pages URL: `https://ornithopter83.github.io/portfolio_web/`
 - NAS URL: `http://suhonas.ipdisk.co.kr:8080/`

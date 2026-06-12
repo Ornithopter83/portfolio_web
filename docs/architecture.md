@@ -36,11 +36,14 @@ Mini PC Node Worker
 ## Structure
 
 - `apps/web`: React + Vite + TypeScript 앱
+- `apps/web/PortfolioLauncher.Web.njsproj`: VS2022 Node.js Tools project
 - `apps/web/src/App.tsx`: 주요 화면과 메시지 작성 흐름
 - `apps/web/src/demoLauncher3d.js`: Three.js 시연 모듈
 - `apps/web/public/sw.js`: Push event와 notification click 처리
 - `apps/web/public/models/witch.glb`: 3D 모델
 - `apps/push-worker`: Mini PC Node Web Push 워커
+- `apps/push-worker/PortfolioLauncher.PushWorker.njsproj`: VS2022 Node.js Tools project
+- `PortfolioLauncher.sln`: VS2022 관리용 솔루션
 - `supabase/migrations`: DB, Storage, RLS 마이그레이션
 - `.github/workflows/deploy-pages.yml`: GitHub Pages HTTPS 배포
 - `scripts/publish-nas.ps1`: React 정적 산출물 NAS 배포
