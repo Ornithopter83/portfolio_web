@@ -38,6 +38,13 @@
     <None Include="src\**\*.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="public\" />
+    <Folder Include="public\models\" />
+    <Folder Include="src\" />
+    <Folder Include="src\lib\" />
+  </ItemGroup>
+
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
 
   <ProjectExtensions>

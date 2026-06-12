@@ -3,6 +3,10 @@ obj/
 .vs/
 .vscode/
 .idea/
+*.njsproj.user
+apps/*/MIGRATED_PROJECT.esproj
+apps/*/PROJECT_MIGRATION_LOG.txt
+apps/*/nuget.config
 .tmp/
 .appdata/
 .dotnet_home/

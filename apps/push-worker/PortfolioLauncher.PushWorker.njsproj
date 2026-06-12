@@ -33,5 +33,9 @@
     <None Include="src\**\*.*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="src\" />
+  </ItemGroup>
+
   <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
 </Project>

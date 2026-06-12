@@ -29,8 +29,20 @@ export async function subscribeToPush() {
     throw new Error('VITE_WEB_PUSH_PUBLIC_KEY가 설정되지 않았습니다.');
   }
 
+  if (!window.isSecureContext) {
+    throw new Error('Web Push notifications require HTTPS. Open the GitHub Pages HTTPS URL on your phone.');
+  }
+
+  if (!('Notification' in window)) {
+    throw new Error('This browser does not support the Notification API. Try Android Chrome with the GitHub Pages HTTPS URL.');
+  }
+
+  if (!('PushManager' in window)) {
+    throw new Error('This browser does not support Web Push. Try Android Chrome updated to the latest version.');
+  }
+
   const registration = await registerServiceWorker();
-  const permission = await Notification.requestPermission();
+  const permission = await window.Notification.requestPermission();
 
   if (permission !== 'granted') {
     throw new Error('알림 권한이 허용되지 않았습니다.');
