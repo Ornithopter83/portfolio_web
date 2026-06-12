@@ -1,0 +1,20 @@
+{
+  "name": "portfolio-web-platform",
+  "private": true,
+  "version": "0.2.0",
+  "description": "React static portfolio site with Supabase-backed Web Push worker.",
+  "scripts": {
+    "dev": "npm --workspace apps/web run dev",
+    "build": "npm --workspace apps/web run build",
+    "preview": "npm --workspace apps/web run preview",
+    "worker": "npm --workspace apps/push-worker run start",
+    "worker:once": "npm --workspace apps/push-worker run once"
+  },
+  "workspaces": [
+    "apps/web",
+    "apps/push-worker"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}

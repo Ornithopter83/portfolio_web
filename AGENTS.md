@@ -2,8 +2,16 @@
 
 ## Codex Working Rules
 
-- 기존 Blazor WebAssembly 구조와 C# 스타일을 우선합니다.
-- Three.js 관련 코드는 `wwwroot/js/demoLauncher3d.js`에 둡니다.
-- 정적 배포를 고려해 서버 전용 API 의존성을 추가하지 않습니다.
-- 변경 후 `dotnet restore PortfolioLauncher.sln --configfile NuGet.Config`와 `dotnet build PortfolioLauncher.sln --no-restore`로 검증합니다.
+- 현재 운영 기준은 React + Vite 정적 웹 앱, Node.js Web Push 워커, Supabase, GitHub Pages HTTPS 배포, NAS1DUAL Apache 백업 배포입니다.
+- Three.js 관련 코드는 `apps/web/src/demoLauncher3d.js`에 둡니다.
+- NAS1DUAL에서는 서버 런타임을 실행하지 않고 `apps/web/dist` 정적 산출물만 배포합니다.
+- Node 워커는 Mini PC에서만 실행하며, Supabase service role key와 Web Push private key를 프론트엔드나 Git 저장소에 넣지 않습니다.
+- 변경 후 가능한 경우 다음 명령으로 검증합니다.
+
+```powershell
+npm.cmd install
+cd apps\web
+node ..\..\node_modules\vite\bin\vite.js build
+```
+
 - 문서는 기능 변경과 함께 최신 상태로 유지합니다.

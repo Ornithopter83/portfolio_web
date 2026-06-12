@@ -8,9 +8,15 @@ obj/
 .dotnet_home/
 .nuget/
 artifacts/
+node_modules/
+apps/*/node_modules/
+apps/web/dist/
+apps/web/.vite/
+*.tsbuildinfo
 WEB.zip
 Witch_Animated_IdleWalkCast.glb
 .env
 .env.*
+!.env.example
 supabase/.branches/
 supabase/.temp/

@@ -1,44 +1,100 @@
 # Portfolio Launcher
 
-Blazor WebAssembly Standalone App 기반의 개인 포트폴리오 및 데모 런처 1차 프로토타입입니다.
+React 정적 웹 앱, Supabase, Mini PC Node Web Push 워커, NAS1DUAL Apache 정적 배포를 기준으로 운영하는 포트폴리오 런처입니다.
 
+## Repository
+
+- GitHub: `https://github.com/Ornithopter83/portfolio_web`
+- 유지관리 및 복구 시 이 저장소를 기준으로 clone/pull 합니다.
+
+## Structure
+
+- `apps/web`: React + Vite + TypeScript 정적 웹 앱
+- `apps/web/src/demoLauncher3d.js`: Three.js 3D 시연 모듈
+- `apps/web/public/models/witch.glb`: 시연용 GLB 모델
+- `apps/web/public/sw.js`: Web Push Service Worker
+- `apps/push-worker`: Mini PC에서 실행하는 Node.js Web Push 워커
+- `supabase/migrations`: Supabase DB, Storage, RLS 마이그레이션
+- `.github/workflows/deploy-pages.yml`: GitHub Pages HTTPS 배포 워크플로
+- `scripts/publish-nas.ps1`: React 정적 산출물 NAS 배포 스크립트
+- `docs`: 운영 및 확장 문서
 ## Prerequisites
 
-- Visual Studio 2022
-- .NET 9 SDK
+- Node.js 20 이상
+- npm
+- Supabase CLI
+- NAS1DUAL Apache 정적 웹 서비스
 
-## Run
-
-```powershell
-dotnet restore PortfolioLauncher.sln --configfile NuGet.Config
-dotnet run --project src/PortfolioLauncher.Web/PortfolioLauncher.Web.csproj --no-restore
-```
-
-## Build
+## Web App
 
 ```powershell
-dotnet restore PortfolioLauncher.sln --configfile NuGet.Config
-dotnet build PortfolioLauncher.sln --no-restore
+npm.cmd install
+cd apps\web
+node ..\..\node_modules\vite\bin\vite.js --host 0.0.0.0
 ```
 
-## Publish
+빌드:
 
 ```powershell
-dotnet restore PortfolioLauncher.sln --configfile NuGet.Config
-dotnet publish src/PortfolioLauncher.Web/PortfolioLauncher.Web.csproj -c Release -o artifacts/publish/web --no-restore
+cd apps\web
+node ..\..\node_modules\vite\bin\vite.js build
 ```
 
-정적 배포 산출물은 `artifacts/publish/web/wwwroot`에 생성됩니다.
+웹 앱은 다음 환경 변수를 사용합니다.
+
+```text
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_WEB_PUSH_PUBLIC_KEY=
+```
+
+## Push Worker
+
+Mini PC에서 Node 서버가 켜져 있을 때만 pending 메시지를 처리합니다. 서버가 꺼져 있으면 Supabase에 메시지가 쌓이고, 웹사이트에는 heartbeat 기준으로 서버 OFF가 표시됩니다.
+
+```powershell
+copy apps\push-worker\.env.example apps\push-worker\.env
+node apps\push-worker\src\index.mjs
+```
+
+필요한 환경 변수:
+
+```text
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+WEB_PUSH_PUBLIC_KEY=
+WEB_PUSH_PRIVATE_KEY=
+WEB_PUSH_SUBJECT=mailto:admin@example.com
+PUBLIC_SITE_URL=https://ornithopter83.github.io/portfolio_web
+WORKER_ID=mini-pc-push-worker
+POLL_INTERVAL_MS=15000
+```
+
+`SUPABASE_SERVICE_ROLE_KEY`와 `WEB_PUSH_PRIVATE_KEY`는 브라우저, NAS 정적 파일, Git 저장소에 넣지 않습니다.
+
+## GitHub Pages Publish
+
+Web Push 테스트와 외부 접속은 GitHub Pages HTTPS URL을 기본으로 사용합니다.
+
+```text
+https://ornithopter83.github.io/portfolio_web/
+```
+
+`main` branch에 push하면 `.github/workflows/deploy-pages.yml`가 `apps/web/dist`를 Pages로 배포합니다. 자세한 설정은 `docs/deployment-github-pages.md`를 참고합니다.
+
+Mini PC Node worker의 `PUBLIC_SITE_URL`도 다음 값으로 설정합니다.
+
+```text
+PUBLIC_SITE_URL=https://ornithopter83.github.io/portfolio_web
+```
 
 ## NAS Publish
 
-NAS1DUAL Apache에서는 `/_framework` 경로 접근이 `403 Forbidden`으로 막힐 수 있으므로, NAS 배포본은 `framework` 폴더명으로 변환합니다.
+NAS1DUAL은 Node/React를 실행하지 않고, React 빌드 산출물만 Apache로 서빙합니다. NAS 배포는 내부/백업 배포처로 사용할 수 있습니다.
 
 ```powershell
-.\scripts\publish-nas.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas.ps1
 ```
-
-업로드 대상 산출물은 `artifacts/publish-nas-no-underscore`에 생성됩니다. 이 폴더 안의 내용물 전체를 NAS Document Root인 `/HDD1/DocRoot`로 복사합니다.
 
 ipTIME ipDISK Drive로 NAS가 `S:`에 마운트되어 있다면 생성과 복사를 한 번에 실행할 수 있습니다.
 
@@ -52,11 +108,9 @@ NAS 배포와 GitHub push를 한 번에 실행하려면:
 powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1
 ```
 
-더블클릭 실행이 필요하면 `scripts\publish-nas-and-push.cmd`를 사용합니다. GitHub push만 실행하려면 `scripts\push-main.cmd`를 사용합니다.
-
 ## Supabase
 
-Supabase DB 변경사항은 `supabase/migrations`에서 관리합니다. 새 Supabase 프로젝트를 만든 뒤 CLI로 연결하고 마이그레이션을 적용합니다.
+Supabase DB 변경사항은 `supabase/migrations`에서 관리합니다.
 
 ```powershell
 supabase login
@@ -64,18 +118,10 @@ supabase link --project-ref <project-ref>
 supabase db push
 ```
 
-현재 초기 마이그레이션은 `관리자`, `방문객` 2가지 앱 권한 상태를 생성합니다.
+현재 마이그레이션은 앱 권한, 메시지, 첨부, Push 구독, 발송 결과, 서버 heartbeat를 생성합니다.
 
-## Demo Launcher 3D
+## Web Push
 
-시연 모달은 `wwwroot/models/witch.glb`를 Three.js로 로드합니다. 현재 GLB에는 내장 animation clip이 없어 시연 버튼 클릭 시 JavaScript에서 팔/다리 본을 움직이는 절차적 걷기 동작을 재생합니다.
-## Script Flow
+사용자는 웹사이트에서 알림 구독을 허용합니다. 구독 정보는 Supabase에 저장되고, Mini PC Node 워커가 pending 메시지를 읽어 Web Push를 발송합니다. 알림 클릭 시 웹사이트로 이동합니다.
 
-- `scripts\publish-nas.ps1`: restore, Release publish, rewrite `_framework` to `framework`, remove `.br`/`.gz`, and optionally copy to `-DeployPath`.
-- `scripts\publish-nas-and-push.ps1`: verifies that `C:\Project\WEB` is the Git repository root, runs `publish-nas.ps1`, then runs `push-main.ps1`.
-- Use `-NoRestore` only after packages are already restored.
-- Use `-SkipPush` to test the server copy without pushing to GitHub.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1 -DeployPath S:\HDD1\DocRoot
-```
+자세한 내용은 `docs/react-node-supabase-nas1dual.md`를 참고합니다.

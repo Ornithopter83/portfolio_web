@@ -1,11 +1,15 @@
 # NAS Static Deployment
 
+## Current Target
+
+NAS1DUAL은 React와 Node.js를 실행하지 않습니다. 개발 PC 또는 CI에서 React 앱을 빌드한 뒤, `apps/web/dist` 정적 산출물을 NAS Apache Document Root인 `/HDD1/DocRoot`에 배포합니다.
+
+Web Push 실사용과 스마트폰 알림 테스트는 GitHub Pages HTTPS 배포를 기본으로 사용합니다. NAS 배포는 내부 확인 또는 백업 배포처입니다.
+
 ## Automated NAS Output
 
-NAS1DUAL Apache에서 Blazor 기본 경로인 `/_framework` 접근이 `403 Forbidden`으로 막힐 수 있습니다. NAS 배포본은 `_framework` 폴더를 `framework`로 바꾸고 Blazor 부트스트랩 스크립트 내부 경로도 함께 치환합니다.
-
 ```powershell
-.\scripts\publish-nas.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas.ps1
 ```
 
 ipTIME ipDISK Drive로 NAS가 `S:`에 마운트되어 있다면 생성과 복사를 한 번에 실행할 수 있습니다.
@@ -27,70 +31,40 @@ scripts\publish-nas-and-push.cmd
 scripts\push-main.cmd
 ```
 
-push 스크립트는 커밋되지 않은 변경사항이 있으면 중단합니다. 먼저 commit을 만든 뒤 실행합니다.
+## Script Flow
 
-스크립트는 다음 작업을 수행합니다.
+`scripts/publish-nas.ps1`는 다음 작업을 수행합니다.
 
-1. `dotnet restore PortfolioLauncher.sln --configfile NuGet.Config`
-2. `dotnet publish src/PortfolioLauncher.Web/PortfolioLauncher.Web.csproj -c Release -o artifacts/publish/web --no-restore`
-3. `artifacts/publish/web/wwwroot` 내용을 `artifacts/publish-nas-no-underscore`로 복사
-4. `_framework` 폴더를 `framework`로 변경
-5. `index.html`과 `framework/blazor.webassembly.js`의 `_framework` 참조를 `framework`로 변경
-6. NAS Apache에서 직접 압축 전송을 기대하지 않도록 `.br`, `.gz` 파일 제거
-7. `-DeployPath`가 지정된 경우 해당 경로로 산출물을 덮어쓰기 복사
-8. 대상 경로의 `_framework`, `.br`, `.gz` 잔여물을 정리
-9. 대상 경로에 `index.html`, `framework/blazor.webassembly.js`, `framework/blazor.boot.json`이 있는지 확인
+1. `npm.cmd install`
+2. `node ..\..\node_modules\vite\bin\vite.js build` in `apps/web`
+3. `apps/web/dist` 내용을 `artifacts/publish-nas-static`으로 복사
+4. `.br`, `.gz` 잔여물 제거
+5. `-DeployPath`가 지정된 경우 해당 경로의 앱 관리 항목을 교체
+6. 대상 경로에 `index.html`, `sw.js`, `manifest.webmanifest`가 있는지 확인
 
-`-DeployPath` 복사는 기존 항목을 먼저 삭제하지 않습니다. 네트워크 드라이브 복사가 중간에 끊겨도 웹 루트가 빈 상태로 남는 위험을 줄이기 위해 덮어쓰기 후 잔여 압축 파일만 정리합니다. 예를 들어 `apps`처럼 배포 산출물에 없는 NAS 폴더는 유지됩니다.
+이미 의존성이 설치되어 있으면 `-NoInstall`을 사용할 수 있습니다.
 
-`artifacts/publish-nas-no-underscore` 안의 내용물 전체를 `/HDD1/DocRoot`로 복사합니다.
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas.ps1 -NoInstall
+```
 
 ## Manual Release Output
 
 ```powershell
-dotnet restore PortfolioLauncher.sln --configfile NuGet.Config
-dotnet publish src/PortfolioLauncher.Web/PortfolioLauncher.Web.csproj -c Release -o artifacts/publish/web --no-restore
+npm.cmd install
+cd apps\web
+node ..\..\node_modules\vite\bin\vite.js build
 ```
 
-수동으로 배포할 때도 자동화 스크립트와 동일하게 `_framework`를 `framework`로 바꾸고, `index.html` 및 `framework/blazor.webassembly.js` 내부 경로를 수정한 뒤 `.br`, `.gz` 파일을 제거합니다.
+수동 배포 시 `apps/web/dist` 안의 내용물 전체를 `/HDD1/DocRoot`로 복사합니다.
 
 ## Check URLs
 
 ```text
 http://suhonas.ipdisk.co.kr:8080/
-http://suhonas.ipdisk.co.kr:8080/portfolio
-http://suhonas.ipdisk.co.kr:8080/framework/blazor.webassembly.js
-http://suhonas.ipdisk.co.kr:8080/framework/blazor.boot.json
+http://suhonas.ipdisk.co.kr:8080/sw.js
+http://suhonas.ipdisk.co.kr:8080/manifest.webmanifest
+http://suhonas.ipdisk.co.kr:8080/models/witch.glb
 ```
 
-`framework/blazor.webassembly.js`에서 긴 JavaScript 코드가 보이면 framework 경로 우회가 적용된 상태입니다. 실제 화면은 `/`에서 확인합니다.
-
-## MIME Types
-
-- `.wasm`: `application/wasm`
-- `.dll`: `application/octet-stream`
-- `.json`: `application/json`
-- `.js`: `text/javascript`
-## Current Script Flow
-
-`publish-nas.ps1` owns the deployable build:
-
-1. Optional `dotnet restore`.
-2. `dotnet publish` in Release mode.
-3. Copy `wwwroot` into `artifacts/publish-nas-no-underscore`.
-4. Rename `_framework` to `framework`.
-5. Rewrite framework references in text files.
-6. Remove `.br` and `.gz`.
-7. If `-DeployPath` is supplied, remove old app-managed entries in that target and copy the fresh output.
-
-`publish-nas-and-push.ps1` owns orchestration:
-
-1. Verify that `C:\Project\WEB` is a Git repository root.
-2. Run `publish-nas.ps1`.
-3. Run `push-main.ps1` unless `-SkipPush` is supplied.
-
-Test server copy without Git push:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\publish-nas-and-push.ps1 -NoRestore -SkipPush -DeployPath .\artifacts\deploy-script-check
-```
+Web Push는 HTTPS 환경이 필요합니다. 실제 스마트폰 알림은 `https://ornithopter83.github.io/portfolio_web/` GitHub Pages 배포에서 확인합니다.

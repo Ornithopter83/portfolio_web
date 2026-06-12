@@ -22,6 +22,8 @@ The first migration creates two application access states:
 - `admin`: 관리자
 - `visitor`: 방문객
 
+The Web Push migration creates message queue tables, attachment metadata, push subscriptions, delivery logs, server heartbeat rows, and the `message-attachments` Storage bucket.
+
 New Supabase Auth users receive `visitor` by default. Promote the first administrator in the SQL Editor after signing in once:
 
 ```sql
@@ -36,4 +38,4 @@ where user_id = '<admin-user-id>';
 
 When enabling Supabase GitHub Integration, set the working directory to `.` because the `supabase/` directory is at the repository root.
 
-Do not store the Supabase `service_role` key in this Blazor WebAssembly app. Browser-side code must only use the public anon key, and database access should be controlled with Row Level Security policies.
+Do not store the Supabase `service_role` key in the React web app or NAS static files. Browser-side code must only use the public anon key, and database access should be controlled with Row Level Security policies. The service role key belongs only in the Mini PC Node push worker environment.

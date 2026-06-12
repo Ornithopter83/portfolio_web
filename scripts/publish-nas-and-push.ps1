@@ -2,7 +2,7 @@ param(
     [string]$DeployPath = "S:\HDD1\DocRoot",
     [string]$Remote = "origin",
     [string]$Branch = "main",
-    [switch]$NoRestore,
+    [switch]$NoInstall,
     [switch]$SkipDeploy,
     [switch]$SkipPush
 )
@@ -32,10 +32,10 @@ Assert-GitRepository
 if (-not $SkipDeploy) {
     $publishArgs = @{
         DeployPath = $DeployPath
-        NoRestore = $NoRestore
+        NoInstall = $NoInstall
     }
 
-    Write-Host "Publishing Release build and copying NAS output..."
+    Write-Host "Building React static app and copying NAS output..."
     & $publishScript @publishArgs
     if ($LASTEXITCODE -ne 0) {
         throw "NAS publish/deploy failed with exit code $LASTEXITCODE."
