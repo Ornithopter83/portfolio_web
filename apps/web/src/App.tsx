@@ -213,7 +213,7 @@ function Messages() {
     }
 
     if (file && createdMessage?.id) {
-      const path = `${createdMessage.id}/${Date.now()}-${file.name}`;
+      const path = createAttachmentPath(createdMessage.id, file.name);
       const upload = await supabase.storage.from('message-attachments').upload(path, file);
 
       if (upload.error) {
@@ -221,13 +221,18 @@ function Messages() {
         return;
       }
 
-      await supabase.from('message_attachments').insert({
+      const attachment = await supabase.from('message_attachments').insert({
         message_id: createdMessage.id,
         file_path: path,
         file_name: file.name,
         content_type: file.type || 'application/octet-stream',
         size_bytes: file.size
       });
+
+      if (attachment.error) {
+        setMessage(attachment.error.message);
+        return;
+      }
     }
 
     setTitle('');
@@ -278,6 +283,20 @@ function Messages() {
       </div>
     </section>
   );
+}
+
+function createAttachmentPath(messageId: string, fileName: string) {
+  const extension = getSafeFileExtension(fileName);
+  const uniqueName = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  return `${messageId}/${uniqueName}${extension}`;
+}
+
+function getSafeFileExtension(fileName: string) {
+  const match = fileName.match(/\.([A-Za-z0-9]{1,12})$/);
+  return match ? `.${match[1].toLowerCase()}` : '';
 }
 
 function DemoLauncher({ onClose }: { onClose: () => void }) {
