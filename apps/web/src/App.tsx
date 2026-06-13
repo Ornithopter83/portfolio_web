@@ -181,10 +181,10 @@ function Messages() {
         user_agent: navigator.userAgent,
         is_active: true,
         updated_at: new Date().toISOString()
-      });
+      }, { onConflict: 'endpoint' });
 
       if (error) {
-        throw error;
+        throw new Error(`구독 정보 저장 실패: ${error.message}`);
       }
 
       setMessage('알림 구독 정보를 저장했습니다.');
